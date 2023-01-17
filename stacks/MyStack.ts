@@ -4,7 +4,7 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "api", {
     routes: {
       "GET /": "functions/lambda.handler",
-      "POST /translate": "functions/lambda.handler",
+      "POST /translate": "functions/translate.handler",
     },
   });
 

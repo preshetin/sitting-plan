@@ -1,6 +1,7 @@
+import axios from "axios";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import sampleStudents from './sampleStudents.txt?raw'
+import sampleStudents from "./sampleStudents.txt?raw";
 
 const languages = [
   {
@@ -9,11 +10,11 @@ const languages = [
   },
   {
     code: "de",
-    name: "German (Deutch)",
+    name: "🇩🇪 German (Deutch)",
   },
   {
     code: "hi",
-    name: "Hindi",
+    name: "🇮🇳 Hindi",
   },
 ];
 
@@ -40,28 +41,37 @@ function transliterate(word: any): string{
    return answer;
 }
 
-async function addSticky() {
-  //  const stickyNote = await miro.board.createStickyNote({
-  //    content: "Hey bross",
-  //  });
-  // await miro.board.viewport.zoomTo(stickyNote);
-}
-
 const App: React.FC = () => {
   const [studentsListStr, setStudentsListStr] = React.useState("");
   const [rowLength, setRowLength] = React.useState(4);
   const [numerationOrder, setNumerationOrder] = React.useState("leftToRight");
   const [firstNumber, setFirstNumber] = React.useState(1);
-
-  React.useEffect(() => {
-    addSticky();
-  }, []);
+  const [translateToLanguage, setTranslateToLanguage] = React.useState('nolang');
+  const [isTranslating, setIsTranslating] = React.useState(false)
 
   const handleSetExampleStudentsList = () => {
-    setStudentsListStr(
-      transliterate(sampleStudents)
-    )
+    setStudentsListStr(sampleStudents);
   };
+
+  const handleClear = () => {
+    setStudentsListStr("");
+    setTranslateToLanguage("nolang");
+  };
+
+  const handleTranslate = async (e: any) => {
+    const targetLang = e.target.value;
+    
+    setIsTranslating(true);
+    const apiUrl = import.meta.env.VITE_API_URL; 
+    const response = await axios.post(apiUrl + "/translate", {
+      text: studentsListStr,
+      language: targetLang,
+    });
+
+    setStudentsListStr(response.data.translatedMessage.TranslatedText);
+    setTranslateToLanguage(targetLang);
+    setIsTranslating(false);
+  }
 
   async function handleCreate() {
     console.log("creating", {
@@ -107,19 +117,19 @@ const App: React.FC = () => {
     let rowNum = 0;
     for (const sittingPlanRow of sittingPlan) {
       let seatNo = 0;
-      
+
       let x;
 
       for (const student of sittingPlanRow) {
-          if (numerationOrder === 'leftToRight') {
-            x = initialX + seatNo * gapVertical;
-          } else {
-            x = initialX - seatNo * gapVertical;
-          }
+        if (numerationOrder === "leftToRight") {
+          x = initialX + seatNo * gapVertical;
+        } else {
+          x = initialX - seatNo * gapVertical;
+        }
         studentsWithCoordinates.push({
           name: student,
           x,
-          y: initialY - rowNum *  gapHorizontal
+          y: initialY - rowNum * gapHorizontal,
         });
         seatNo++;
       }
@@ -170,18 +180,37 @@ const App: React.FC = () => {
             className="link link-text"
             onClick={handleSetExampleStudentsList}
           >
-            Пример
+            пример
           </a>
+          {" "}
+          <a
+            href="#"
+            className="link link-text"
+            onClick={handleClear}
+          >
+            очистить
+          </a>
+
         </div>
 
-        <label className="checkbox">
-          <input type="checkbox" tabIndex={0} />
-          <span>Перевести в транслит</span>
-        </label>
+        <button
+          onClick={() => setStudentsListStr(transliterate(studentsListStr))}
+          className="button button-secondary"
+          disabled={studentsListStr === ""}
+          type="button"
+        >
+          Перевести в транслит
+        </button>
 
         <div className="form-group">
-          <label htmlFor="seatsOrder">Язык</label>
-          <select className="select" id="seatsOrder">
+          <label htmlFor="translateToLanguage">Язык</label>
+          <select
+            className="select"
+            id="translateToLanguage"
+            disabled={studentsListStr === ""}
+            value={translateToLanguage}
+            onChange={handleTranslate}
+          >
             <option value="nolang">-</option>
             {languages.map((lang) => (
               <option key={lang.code} value={lang.code}>
@@ -189,6 +218,7 @@ const App: React.FC = () => {
               </option>
             ))}
           </select>
+          {isTranslating && <p>Translating.....</p>}
         </div>
 
         <hr />
