@@ -90,9 +90,10 @@ const App: React.FC = () => {
     }
 
     // console.log(sittingPlan);
+    const viewport = await miro.board.viewport.get();
 
-    const initialX = 0;
-    const initialY = 0;
+    const initialX = viewport.x + (viewport.width/3);
+    const initialY = viewport.y + (viewport.height/1.5);
     const elWidth = 90;
     const elHeight = 80;
     const gapVertical = 20;
