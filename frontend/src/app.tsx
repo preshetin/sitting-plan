@@ -2,6 +2,7 @@ import axios from "axios";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import sampleStudents from "./sampleStudents.txt?raw";
+import sampleStudentsWithData from './sampleStudentsWithData.txt?raw'
 
 const languages = [
   {
@@ -49,10 +50,6 @@ const App: React.FC = () => {
   const [translateToLanguage, setTranslateToLanguage] = React.useState('nolang');
   const [isTranslating, setIsTranslating] = React.useState(false)
 
-  const handleSetExampleStudentsList = () => {
-    setStudentsListStr(sampleStudents);
-  };
-
   const handleClear = () => {
     setStudentsListStr("");
     setTranslateToLanguage("nolang");
@@ -74,13 +71,6 @@ const App: React.FC = () => {
   }
 
   async function handleCreate() {
-    console.log("creating", {
-      studentsListStr,
-      rowLength,
-      numerationOrder,
-      firstNumber,
-    });
-
     const students = studentsListStr.split("\n");
 
     const studentsByRowNumbers = students.map((value, key) => ({
@@ -103,9 +93,10 @@ const App: React.FC = () => {
 
     const initialX = 0;
     const initialY = 0;
-    const noteWidth = 60;
-    const gapVertical = 70;
-    const gapHorizontal = 70;
+    const elWidth = 90;
+    const elHeight = 80;
+    const gapVertical = 20;
+    const gapHorizontal = 20;
 
     type SittingPlaceType = {
       name: string;
@@ -122,14 +113,14 @@ const App: React.FC = () => {
 
       for (const student of sittingPlanRow) {
         if (numerationOrder === "leftToRight") {
-          x = initialX + seatNo * gapVertical;
+          x = initialX + seatNo * (gapHorizontal + elWidth );
         } else {
-          x = initialX - seatNo * gapVertical;
+          x = initialX - seatNo * (gapHorizontal + elWidth);
         }
         studentsWithCoordinates.push({
           name: student,
           x,
-          y: initialY - rowNum * gapHorizontal,
+          y: initialY - rowNum * (gapVertical + elHeight),
         });
         seatNo++;
       }
@@ -138,31 +129,41 @@ const App: React.FC = () => {
 
     console.log(studentsWithCoordinates);
 
-    let stickyNotes = [];
+    let elements = [];
     let studentNumber = firstNumber;
     for (const student of studentsWithCoordinates) {
-      const stickyNote = await miro.board.createStickyNote({
-        content: `${student.name}\n${studentNumber}`,
+
+      // const element = await miro.board.createShape({
+      //   content: buildCardContent(student.name, studentNumber),
+      //   x: student.x,
+      //   y: student.y,
+      //   width: elWidth,
+      //   height: elHeight,
+      //   shape: 'round_rectangle',
+      //   style: {
+      //     borderWidth: 1
+          
+      //   }
+      // });
+
+
+      const element = await miro.board.createStickyNote({
+        content: `${student.name}<br />${studentNumber}`,
+        // content: buildCardContent(student.name, studentNumber),
         x: student.x,
         y: student.y,
-        width: noteWidth,
+        width: elWidth,
+        style: { textAlign: "left", textAlignVertical: "top", fillColor: 'gray' },
       });
       studentNumber++;
-      stickyNotes.push(stickyNote);
+      elements.push(element);
     }
 
-    await miro.board.viewport.zoomTo(stickyNotes);
+    await miro.board.viewport.zoomTo(elements);
   }
 
   return (
     <div className="grid wrapper">
-      {/* <div className="cs1 ce12">
-        	<button
-          onClick={() => handleAddStudentsList()}
-          className="button button-primary" type="button">
-            Добавить список студентов
-          </button>
-      </div> */}
       <div className="cs1 ce12">
         <div className="form-group">
           <label htmlFor="textarea-example">Список студентов</label>
@@ -178,9 +179,17 @@ const App: React.FC = () => {
           <a
             href="#"
             className="link link-text"
-            onClick={handleSetExampleStudentsList}
+            onClick={() => setStudentsListStr(sampleStudents)}
           >
             пример
+          </a>
+          {" "}
+          <a
+            href="#"
+            className="link link-text"
+            onClick={() => setStudentsListStr(sampleStudentsWithData)}
+          >
+            еще пример
           </a>
           {" "}
           <a
@@ -193,6 +202,7 @@ const App: React.FC = () => {
 
         </div>
 
+        {studentsListStr !== transliterate(studentsListStr) && 
         <button
           onClick={() => setStudentsListStr(transliterate(studentsListStr))}
           className="button button-secondary"
@@ -200,7 +210,7 @@ const App: React.FC = () => {
           type="button"
         >
           Перевести в транслит
-        </button>
+        </button>}
 
         <div className="form-group">
           <label htmlFor="translateToLanguage">Язык</label>
@@ -272,6 +282,7 @@ const App: React.FC = () => {
           <button
             onClick={() => handleCreate()}
             className="button button-primary"
+            disabled={studentsListStr === ''}
             type="button"
           >
             Создать
@@ -285,3 +296,12 @@ const App: React.FC = () => {
 const container = document.getElementById("root");
 const root = createRoot(container);
 root.render(<App />);
+
+function buildCardContent(content: string, studentNumber: number ): string {
+  let contentArr = content.split('--');
+  contentArr[0] = `<b>${contentArr[0]}</b>`;
+  const contentStr = contentArr.join('<br />');
+
+  return `${contentStr}<br />${studentNumber}`
+}
+
