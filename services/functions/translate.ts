@@ -11,13 +11,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   }
 
   const body = JSON.parse(event.body);
-  const { text, language } = body;
+  const { text, sourceLanguageCode, language } = body;
 
   const translate = new AWS.Translate();
 
   const translateParams: AWS.Translate.Types.TranslateTextRequest = {
     Text: text,
-    SourceLanguageCode: "en",
+    SourceLanguageCode: sourceLanguageCode,
     TargetLanguageCode: language,
   };
 

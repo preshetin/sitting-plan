@@ -62,6 +62,7 @@ const App: React.FC = () => {
     const apiUrl = import.meta.env.VITE_API_URL; 
     const response = await axios.post(apiUrl + "/translate", {
       text: studentsListStr,
+      sourceLanguageCode: 'en',
       language: targetLang,
     });
 
